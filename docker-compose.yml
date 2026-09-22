@@ -1,0 +1,20 @@
+# whisper-engine — CPU. Para iGPU Intel sumar docker-compose.intel.yml; para
+# levantar también el frontend, docker-compose.full.yml. Ver README.
+services:
+  engine:
+    image: ghcr.io/kity-linuxero/whisper-engine:${ENGINE_VERSION:-latest}-cpu
+    build:
+      context: .
+      target: cpu
+    container_name: whisper-engine
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${BIND_HOST:-0.0.0.0}:${ENGINE_PORT:-8080}:8080"
+    volumes:
+      - models:/models
+      - jobs:/jobs
+
+volumes:
+  models:
+  jobs:

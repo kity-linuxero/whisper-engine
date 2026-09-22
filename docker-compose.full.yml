@@ -1,0 +1,24 @@
+# Suma el frontend (whisper-idep) al mismo compose:
+#   docker compose -f docker-compose.yml -f docker-compose.full.yml up -d
+#   (con iGPU Intel: -f docker-compose.yml -f docker-compose.intel.yml -f docker-compose.full.yml)
+# La app NO tiene login propio: exponerla a internet solo detrás de un proxy con auth.
+services:
+  app:
+    image: ghcr.io/kity-linuxero/whisper-idep:${APP_VERSION:-latest}
+    container_name: whisper-app
+    restart: unless-stopped
+    depends_on:
+      - engine
+    environment:
+      ENGINE_URL: http://engine:8080
+      ENGINE_TOKEN: ${ENGINE_TOKEN:?definir ENGINE_TOKEN en .env}
+      PORT: 3000
+    ports:
+      - "${BIND_HOST:-0.0.0.0}:${APP_PORT:-3000}:3000"
+    volumes:
+      - app-data:/app/data
+      - app-uploads:/app/uploads
+
+volumes:
+  app-data:
+  app-uploads:

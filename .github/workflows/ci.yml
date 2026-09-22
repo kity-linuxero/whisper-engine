@@ -1,0 +1,42 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: bash -n install/engine-install.sh install/lxc/whisper-engine.sh docker/entrypoint.sh docker/convert.sh
+
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build cpu image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: cpu
+          load: true
+          tags: whisper-engine:ci-cpu
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test (tiny model, real transcription)
+        run: |
+          docker run -d --name eng -p 8080:8080 -e ENGINE_TOKEN=ci-token-0123456789abcdef \
+            -e WHISPER_MODELS=tiny -e WHISPER_LANGUAGE=en whisper-engine:ci-cpu
+          for i in $(seq 1 60); do curl -fsS localhost:8080/health && break; sleep 2; done
+          docker cp eng:/usr/local/share/whisper/jfk.wav jfk.wav
+          curl -fsS -H "Authorization: Bearer ci-token-0123456789abcdef" -F file=@jfk.wav \
+            -F response_format=text localhost:8080/v1/audio/transcriptions | tee out.txt
+          grep -qi "country" out.txt

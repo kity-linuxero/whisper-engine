@@ -1,0 +1,27 @@
+# Override para iGPU Intel vía OpenVINO:
+#   docker compose -f docker-compose.yml -f docker-compose.intel.yml up -d
+# RENDER_GID = GID del grupo dueño de /dev/dri/renderD128 en el host:
+#   stat -c %g /dev/dri/renderD128
+services:
+  engine:
+    image: ghcr.io/kity-linuxero/whisper-engine:${ENGINE_VERSION:-latest}-openvino${INTEL_RUNTIME_SUFFIX:-}
+    build:
+      context: .
+      target: openvino
+      args:
+        INTEL_RUNTIME: ${INTEL_RUNTIME:-current}
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    group_add:
+      - "${RENDER_GID:?definir RENDER_GID en .env (stat -c %g /dev/dri/renderD128)}"
+
+  # Conversión de modelos a OpenVINO IR (una sola vez por modelo):
+  #   docker compose -f docker-compose.yml -f docker-compose.intel.yml run --rm tools small
+  tools:
+    image: ghcr.io/kity-linuxero/whisper-engine:${ENGINE_VERSION:-latest}-tools
+    build:
+      context: .
+      target: tools
+    profiles: ["tools"]
+    volumes:
+      - models:/models

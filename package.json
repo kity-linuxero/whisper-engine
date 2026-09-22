@@ -1,0 +1,19 @@
+{
+  "name": "whisper-engine",
+  "version": "1.0.0",
+  "description": "API REST de transcripción sobre whisper.cpp (CPU o Intel iGPU vía OpenVINO), con cola de trabajos asíncrona y endpoint compatible con OpenAI.",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/server.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "nanoid": "^3.3.7"
+  }
+}

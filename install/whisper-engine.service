@@ -1,0 +1,26 @@
+[Unit]
+Description=whisper-engine: API REST de transcripción sobre whisper.cpp
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=whisper-engine
+Group=whisper-engine
+SupplementaryGroups=render
+EnvironmentFile=/etc/whisper-engine/engine.env
+ExecStart=/opt/whisper-engine/run.sh
+Restart=on-failure
+RestartSec=5
+# whisper-cli is a child of the node process; stop both together.
+KillMode=control-group
+TimeoutStopSec=20
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/whisper-engine
+
+[Install]
+WantedBy=multi-user.target
