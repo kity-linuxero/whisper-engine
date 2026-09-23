@@ -17,6 +17,9 @@ pensada para correr en un homelab: **CPU** en cualquier x86_64, o **iGPU Intel**
   whisper.cpp cae a CPU sin avisar. La API te dice en qué corrió cada trabajo.
 - Un trabajo a la vez (FIFO): correr dos en paralelo sobre la misma CPU o iGPU solo
   hace que ambos tarden más.
+- **El audio no se guarda**: el archivo subido y su conversión se borran apenas termina
+  el trabajo (bien, con error o cancelado). Solo quedan las transcripciones, hasta que el
+  cliente borra el trabajo o pasan `JOB_TTL_HOURS`.
 - Autenticación con un token Bearer. Sin base de datos: el historial es cosa del cliente.
 
 ## Instalación

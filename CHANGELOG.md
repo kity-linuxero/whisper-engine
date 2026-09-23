@@ -4,6 +4,14 @@ Todos los cambios relevantes de este proyecto se documentan acá.
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 versionado [SemVer](https://semver.org/lang/es/).
 
+## [1.0.1] - 2026-09-23
+
+### Cambiado
+- Privacidad: el audio (el archivo subido y el WAV convertido) se borra en
+  cuanto el trabajo termina, sea `done`, `failed` o `cancelled`. Solo quedan
+  las transcripciones, hasta que el cliente borra el trabajo o vence
+  `JOB_TTL_HOURS`.
+
 ## [1.0.0] - 2026-09-22
 
 Primera versión pública. Reemplaza el acceso por SSH con comandos forzados

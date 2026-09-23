@@ -8,6 +8,12 @@ const { probe, isWhisperReady, toWav } = require('./convert');
 const { runWhisper } = require('./runner');
 const { findModel, wantsGpu } = require('./models');
 
+function removeAudio(job) {
+  return Promise.all([job.inputPath, path.join(job.dir, 'input.wav')].map(
+    (f) => fs.promises.rm(f, { force: true })
+  ));
+}
+
 async function processJob({ id }) {
   const job = store.get(id);
   if (!job) return; // deleted while queued
@@ -54,10 +60,10 @@ async function processJob({ id }) {
     }
   } finally {
     job.killFn = null;
-    // The upload itself is no longer needed once a WAV exists (or the job ended).
-    if (job.inputPath !== path.join(job.dir, 'input.wav')) {
-      fs.promises.unlink(job.inputPath).catch(() => {});
-    }
+    // Privacy: audio never outlives its job. Whatever the outcome, both the
+    // upload and the converted WAV are deleted; only the transcripts remain
+    // (until the client DELETEs the job or JOB_TTL_HOURS expires).
+    await removeAudio(job);
     if (job.deleteRequested) await store.remove(id);
   }
 }
@@ -77,6 +83,7 @@ async function cancel(id, { remove = true } = {}) {
   if (queue.cancelQueued(id)) {
     store.update(id, { status: 'cancelled', error: 'cancelled' });
     if (remove) await store.remove(id);
+    else await removeAudio(job);
     return true;
   }
   job.cancelRequested = true;

@@ -60,6 +60,11 @@ test('job lifecycle: upload wav, progress, done, results in every format, delete
   assert.ok(Math.abs(job.audio_duration - 2) < 0.1);
   assert.equal(job.inputPath, undefined, 'internal fields must not leak');
 
+  // Audio never outlives the job: only the transcripts are left.
+  assert.deepEqual(
+    fs.readdirSync(path.join(h.tmp, 'jobs', id)).filter((f) => !f.startsWith('output.')), []
+  );
+
   const args = fs.readFileSync(path.join(h.tmp, 'jobs', id, 'output.args'), 'utf8');
   assert.match(args, /-vmsd 20 -mc 0/);
   assert.match(args, /--vad-model/);
@@ -86,8 +91,9 @@ test('non-WAV input is converted with ffmpeg; model without IR runs on CPU', asy
   const job = await h.waitFor(base, id);
   assert.equal(job.status, 'done');
   assert.equal(job.device, 'CPU');
-  assert.ok(fs.existsSync(path.join(h.tmp, 'jobs', id, 'input.wav')));
-  assert.equal(fs.existsSync(path.join(h.tmp, 'jobs', id, 'upload.mp3')), false, 'upload removed after conversion');
+  // Both the upload and the converted WAV are gone once the job ends.
+  assert.equal(fs.existsSync(path.join(h.tmp, 'jobs', id, 'input.wav')), false);
+  assert.equal(fs.existsSync(path.join(h.tmp, 'jobs', id, 'upload.mp3')), false);
   await fetch(`${base}/v1/jobs/${id}`, { method: 'DELETE', headers: h.auth() });
 });
 
@@ -149,6 +155,7 @@ test('whisper-cli failure marks the job failed with its stderr', async () => {
     const job = await h.waitFor(base, id);
     assert.equal(job.status, 'failed');
     assert.match(job.error, /exited 3.*boom/s);
+    assert.equal(fs.existsSync(path.join(h.tmp, 'jobs', id, 'upload.wav')), false, 'audio removed on failure too');
     await fetch(`${base}/v1/jobs/${id}`, { method: 'DELETE', headers: h.auth() });
   } finally {
     delete process.env.FAKE_FAIL;

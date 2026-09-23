@@ -1,6 +1,6 @@
 {
   "name": "whisper-engine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "API REST de transcripción sobre whisper.cpp (CPU o Intel iGPU vía OpenVINO), con cola de trabajos asíncrona y endpoint compatible con OpenAI.",
   "license": "MIT",
   "private": true,
